@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UrgentNow — Find Urgent Care Near You</title>
+    <meta name="description" content="UrgentNow helps you find the nearest urgent care or emergency room based on your symptoms." />
+
+    <!-- ── Security Headers ───────────────────────────────────────────────── -->
+
+    <!--
+      Content-Security-Policy:
+      • script-src 'self' 'unsafe-inline' — 'unsafe-inline' required for Vite dev HMR;
+        acceptable for a SPA where the bundle is self-contained.
+      • style-src allows inline styles (Tailwind/shadcn) and Google Fonts CSS.
+      • connect-src allows Supabase (REST + WebSocket) and OSM Nominatim geocoding.
+      • frame-ancestors 'none' — prevents clickjacking via iframes.
+      • object-src 'none' — disables Flash/plugins.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com data:;
+      img-src 'self' data: blob:
+        https://*.basemaps.cartocdn.com
+        https://*.tile.openstreetmap.org
+        https://*.tile.openstreetmap.fr;
+      connect-src 'self'
+        https://*.supabase.co
+        wss://*.supabase.co
+        https://nominatim.openstreetmap.org;
+      frame-src 'none';
+      frame-ancestors 'none';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    " />
+
+    <!-- Prevent clickjacking in older browsers that don't support CSP frame-ancestors -->
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+
+    <!-- Don't send Referer header to third-party origins (protects user privacy) -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Restrict browser feature access — only allow mic/geo from same origin -->
+    <meta http-equiv="Permissions-Policy"
+      content="microphone=(self), geolocation=(self), camera=(), payment=()" />
+
+    <!-- Prevent MIME-type sniffing -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+
+    <!-- Opt out of Google's FLoC/Topics tracking -->
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+
+    <!-- ── Social / SEO ───────────────────────────────────────────────────── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="UrgentNow — Find Urgent Care Near You" />
+    <meta property="og:description" content="AI-powered triage helps you find the right care at the right time." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="UrgentNow" />
+    <meta name="twitter:description" content="Find urgent care or ER near you based on your symptoms." />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

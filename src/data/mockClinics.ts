@@ -1,0 +1,58 @@
+import { Clinic } from "./types";
+
+export const mockClinics: Clinic[] = [
+  {
+    id: "1",
+    name: "ZoomCare - South Lake Union",
+    address: "116 Westlake Ave N, Seattle, WA 98109",
+    coordinates: { lat: 47.6198, lng: -122.3383 },
+    wait_time_min: 15,
+    travel_time_min: 5,
+    rating: 4.8,
+    provider: "ZoomCare",
+    status: "Shortest Wait",
+    url: "https://www.zoomcare.com/clinic/zoomcare-south-lake-union",
+    phone: "+12069463100",
+  },
+  {
+    id: "2",
+    name: "UW Medicine Urgent Care - Ballard",
+    address: "1455 NW Leary Way, Seattle, WA 98107",
+    coordinates: { lat: 47.6639, lng: -122.3768 },
+    wait_time_min: 40,
+    travel_time_min: 12,
+    rating: 4.6,
+    provider: "UW Medicine",
+    status: "High Capacity",
+    url: "https://www.uwmedicine.org/locations/ballard/urgent-care",
+    phone: "+12065205000",
+  },
+  {
+    id: "3",
+    name: "MultiCare Indigo - Rainier Ave",
+    address: "3820 Rainier Ave S, Seattle, WA 98118",
+    coordinates: { lat: 47.5689, lng: -122.2892 },
+    wait_time_min: 25,
+    travel_time_min: 15,
+    rating: 4.9,
+    provider: "MultiCare Indigo",
+    status: "Fast Service",
+    url: "https://www.multicare.org/location/indigo-urgent-care-seattle-rainier/",
+    phone: "+12538483000",
+  },
+  {
+    id: "4",
+    name: "ZoomCare - Capitol Hill",
+    address: "531 Broadway E, Seattle, WA 98102",
+    coordinates: { lat: 47.6235, lng: -122.321 },
+    wait_time_min: 60,
+    travel_time_min: 8,
+    rating: 4.2,
+    provider: "ZoomCare",
+    status: "Busy",
+    url: "https://www.zoomcare.com/clinic/zoomcare-capitol-hill",
+    phone: "+12069463100",
+  },
+];
+
+export const USER_LOCATION = { lat: 47.6062, lng: -122.3321 };
