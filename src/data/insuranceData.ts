@@ -133,6 +133,27 @@ export const PROVIDER_INSURANCE_MAP: Record<string, string[]> = {
     "premera", "regence", "aetna", "cigna", "united",
     "medicare", "medicaid", "self_pay",
   ],
+
+  // The Polyclinic
+  "The Polyclinic": [
+    "premera", "regence", "aetna", "cigna", "united",
+    "molina", "medicare", "medicaid", "self_pay",
+  ],
+  "Polyclinic": [
+    "premera", "regence", "aetna", "cigna", "united",
+    "molina", "medicare", "medicaid", "self_pay",
+  ],
+
+  // Neighborcare Health (community health center)
+  "Neighborcare": [
+    "premera", "regence", "molina", "medicare", "medicaid", "self_pay",
+  ],
+
+  // EvergreenHealth
+  "EvergreenHealth": [
+    "premera", "regence", "aetna", "cigna", "united",
+    "molina", "medicare", "medicaid", "self_pay",
+  ],
 };
 
 export type NetworkStatus = "in_network" | "out_of_network" | "call_to_verify" | "none";

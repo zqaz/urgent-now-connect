@@ -111,9 +111,9 @@ const ClinicCard = ({ clinic, rank, networkStatus = "none", onNavigate }: Clinic
                   {badge.labelCall ?? "Call to find out"}
                 </span>
               </a>
-            ) : badge.clickable && clinic.phone ? (
+            ) : badge.clickable ? (
               <a
-                href={`tel:${clinic.phone}`}
+                href={`tel:${clinic.phone || '911'}`}
                 className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full mt-2 min-h-[28px] items-center ${badge.className}`}
                 onClick={(e) => e.stopPropagation()}
               >

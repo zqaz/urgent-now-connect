@@ -22,10 +22,10 @@ function sanitizeClinicUrl(url: unknown): string {
 }
 
 function sanitizeClinicPhone(phone: unknown): string {
-  if (typeof phone !== "string") return "";
+  if (typeof phone !== "string") return "911";
   const digits = phone.replace(/\D/g, "");
   if (digits.length >= 10 && digits.length <= 15) return "+" + digits;
-  return "";
+  return "911"; // Fallback to 911 for emergency services
 }
 
 interface AIConfig {
@@ -96,30 +96,33 @@ serve(async (req) => {
     const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" });
     const timeOfDay = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
 
-    const systemPrompt = `You are a medical facility locator. Given a user's GPS coordinates, find real ${facilityType} nearby and estimate realistic wait times and travel times.
+    const systemPrompt = `You are a medical facility locator with access to Google Maps/Places data. Given a user's GPS coordinates, find real ${facilityType} nearby with their actual phone numbers.
 
 Current day: ${dayOfWeek}
 Current time: ${timeOfDay}
 
 Return EXACTLY 10 facilities as a JSON array. Each object must have these exact fields:
 - "id": a unique string id (e.g. "clinic-1" or "er-1")
-- "name": the real name of the facility
-- "address": the real street address
-- "coordinates": { "lat": number, "lng": number } - the facility's real coordinates
+- "name": the REAL name of the facility from Google Maps/Places
+- "address": the REAL street address
+- "coordinates": { "lat": number, "lng": number } - the facility's REAL GPS coordinates
 - "wait_time_min": estimated wait time in minutes (integer, realistic for this time of day and facility type)
 - "travel_time_min": estimated driving time from user's location in minutes (integer)
-- "rating": a realistic rating from 3.5 to 5.0 (one decimal)
-- "provider": the healthcare system name (e.g. "Swedish", "UW Medicine")
+- "rating": the REAL Google rating from 3.5 to 5.0 (one decimal)
+- "provider": the healthcare system name (e.g. "Swedish", "UW Medicine", "ZoomCare", "MultiCare")
 - "status": a short status label like "Shortest Wait", "Level 1 Trauma", "High Volume", "Fast Service", "Open 24/7"
-- "url": a real HTTPS URL for the facility (must start with https://)
-- "phone": a US phone number string for the facility (e.g. "+12065551234" or "206-555-1234") so users can call to verify insurance
+- "url": a REAL HTTPS URL for the facility from Google Maps (must start with https://)
+- "phone": the REAL phone number from Google Maps/Places in format "+12065551234" - THIS IS REQUIRED FOR EVERY FACILITY
+
+CRITICAL: EVERY facility MUST include a valid phone number. Look up the real phone number from Google Maps/Places data. Users need to call to verify insurance coverage.
 
 Guidelines:
-- Use real facility names and addresses near the given coordinates
+- Use REAL facility data from Google Maps/Places API
+- Include the REAL main phone number for each facility - NO EXCEPTIONS
 - Wait times should be realistic: urgent care 10-60 min, ER 15-90 min
 - Travel times should be proportional to distance from user
 - At least one facility should have a notably short wait time
-- Vary the wait times realistically
+- Use actual Google ratings
 
 Respond with ONLY the JSON array, no other text.`;
 

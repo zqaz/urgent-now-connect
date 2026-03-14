@@ -88,8 +88,8 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
       } else {
         const { error: signInErr } = await signIn(email.trim(), password);
         if (signInErr) throw signInErr;
-        onSuccess();
-        onClose();
+        // Reload page to ensure profile loads correctly
+        window.location.reload();
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "An error occurred.";
