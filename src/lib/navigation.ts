@@ -2,7 +2,7 @@
  * Opens directions to a destination in Google Maps.
  * Uses the clinic address string so the destination matches the clinic card.
  */
-export const openDirections = (lat: number, lng: number, name?: string, address?: string) => {
+export const openDirections = (lat: number, lng: number, _name?: string, address?: string) => {
   // Prefer address string so Google Maps shows the same address as the clinic card.
   // Fall back to coordinates if no address is provided.
   const destination = address

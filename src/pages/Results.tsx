@@ -9,7 +9,7 @@ import FacilityCard from "@/components/FacilityCard";
 import {
   mockFacilities,
   type FacilityType,
-  facilityTypeLabels,
+  
 } from "@/data/mockFacilities";
 
 const filterOptions: { value: FacilityType | "all"; label: string }[] = [

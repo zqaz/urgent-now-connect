@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { History, X, ChevronDown, ChevronUp, MapPin, Trash2, ExternalLink } from "lucide-react";
+import { History, ChevronDown, ChevronUp, MapPin, Trash2, ExternalLink } from "lucide-react";
 import { HistoryEntry } from "@/hooks/useHistory";
 
 interface HistoryPanelProps {

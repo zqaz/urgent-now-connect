@@ -51,7 +51,7 @@ const Index = () => {
   const [userLocation, setUserLocation] = useState(DEFAULT_LOCATION);
   const [showLocationPrompt, setShowLocationPrompt] = useState(true);
   const [locationRequesting, setLocationRequesting] = useState(false);
-  const [locationError, setLocationError] = useState<string>();
+  const [locationError, _setLocationError] = useState<string>();
   const [hasRealLocation, setHasRealLocation] = useState(false);
   const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
   const [selectedInsurance, setSelectedInsurance] = useState<string | null>(null);

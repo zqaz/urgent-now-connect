@@ -119,7 +119,7 @@ export function useProfile(user: User | null) {
 
       const { data, error } = await supabase
         .from("profiles")
-        .upsert({ id: user.id, ...updates })
+        .upsert({ id: user.id, ...updates } as any)
         .select()
         .single();
 
