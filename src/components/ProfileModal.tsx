@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   X, User, ShieldCheck,
-  Pill, Stethoscope, Phone, FileText, Save, Loader2, LogOut, CheckCircle2,
+  Stethoscope, Phone, FileText, Save, Loader2, LogOut, CheckCircle2,
 } from "lucide-react";
 import { UserProfile, UserProfileUpdate } from "@/hooks/useProfile";
 import { INSURANCE_OPTIONS } from "@/data/insuranceData";
