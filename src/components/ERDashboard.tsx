@@ -22,7 +22,7 @@ const ERDashboard = ({
   severity,
   recommendation,
   onBack,
-  isLoading,
+  isLoading: _isLoading,
   userLocation,
   onNavigate,
   selectedInsurance = null,

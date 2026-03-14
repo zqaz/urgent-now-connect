@@ -41,7 +41,7 @@ const ProfileModal = ({
   profile,
   userEmail,
   saving,
-  isLocalMode = false,
+  isLocalMode: _isLocalMode = false,
   onSave,
   onSignOut,
   onClose,
