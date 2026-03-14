@@ -86,7 +86,6 @@ const HeroScreen = ({
     }
   }, [isRecording, micPermission, onStartRecording, onStopRecording]);
 
-  const _needsPermission = micPermission === "denied" || micPermission === "prompt";
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] px-6">
