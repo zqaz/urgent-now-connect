@@ -1,4 +1,4 @@
-import { Activity, ArrowLeft, Shield, AlertTriangle, Phone, ShieldCheck } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Phone, ShieldCheck } from "lucide-react";
 import { Clinic } from "@/data/types";
 import { getNetworkStatus, INSURANCE_OPTIONS } from "@/data/insuranceData";
 import WinnerCard from "./WinnerCard";
