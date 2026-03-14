@@ -1,3 +1,5 @@
+Pushing the original UI/UX functionality changes.
+
 # Welcome to your Lovable project
 
 ## Project info

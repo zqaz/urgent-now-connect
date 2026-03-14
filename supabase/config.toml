@@ -1,0 +1,11 @@
+project_id = "tnbijkofsnrenzljvqix"
+
+# verify_jwt = true requires every request to include a valid Supabase JWT
+# (either the anon key JWT or a user session JWT issued by this project).
+# The supabase-js SDK sends this automatically via the Authorization header.
+# This prevents unauthenticated abuse of the AI gateway from arbitrary HTTP clients.
+[functions.triage-evaluate]
+verify_jwt = true
+
+[functions.fetch-clinics]
+verify_jwt = true
