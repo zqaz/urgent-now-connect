@@ -3,7 +3,6 @@ import { AppState, TriageResult, Clinic } from "@/data/types";
 import { mockClinics } from "@/data/mockClinics";
 import { mockERs } from "@/data/mockERs";
 import HeroScreen from "@/components/HeroScreen";
-import TranscriptConfirm from "@/components/TranscriptConfirm";
 import TriageLoader from "@/components/TriageLoader";
 import InsuranceSelect from "@/components/InsuranceSelect";
 import Dashboard from "@/components/Dashboard";
@@ -152,22 +151,12 @@ const Index = () => {
       return;
     }
     setConfirmedTranscript(text);
-    setAppState("confirm");
-  }, [stopListening, toast]);
-
-  const handleConfirmTranscript = useCallback((text: string) => {
-    setConfirmedTranscript(text);
     setAppState("analyzing");
-  }, []);
-
-  const handleRetry = useCallback(() => {
-    setConfirmedTranscript("");
-    setAppState("hero");
-  }, []);
+  }, [stopListening, toast]);
 
   const handleSubmitText = useCallback((text: string) => {
     setConfirmedTranscript(text);
-    setAppState("confirm");
+    setAppState("analyzing");
   }, []);
 
   const handleNavigateClinic = useCallback((clinic: Clinic) => {
@@ -210,12 +199,10 @@ const Index = () => {
       // PHI (symptom transcript) intentionally excluded from log output
       if (import.meta.env.DEV) console.error("Triage evaluation failed:", err);
       toast({
-        title: "Evaluation Error",
+        title: "Using urgent care options",
         description:
-          err instanceof Error
-            ? err.message
-            : "Could not evaluate symptoms. Showing urgent care options as a fallback.",
-        variant: "destructive",
+          "We couldn't complete the symptom check right now. Please select your insurance below to see nearby urgent care options.",
+        variant: "default",
       });
       const entryId = addEntry(confirmedTranscript, "urgent_care");
       setCurrentEntryId(entryId);
@@ -367,14 +354,6 @@ const Index = () => {
 
       {appState === "hero" && (
         <HistoryPanel history={history} onClear={clearHistory} />
-      )}
-
-      {appState === "confirm" && (
-        <TranscriptConfirm
-          transcript={confirmedTranscript}
-          onConfirm={handleConfirmTranscript}
-          onRetry={handleRetry}
-        />
       )}
 
       {appState === "analyzing" && (

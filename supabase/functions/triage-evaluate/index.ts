@@ -68,19 +68,20 @@ Respond with ONLY the JSON object, no other text.`;
       ],
     });
 
-    const headers = {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "Content-Type": "application/json",
-    };
-
     let response: Response | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
-        { method: "POST", headers, body: requestBody }
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: requestBody,
+        }
       );
       if (response.ok || (response.status !== 500 && response.status !== 503)) break;
-      console.warn(`AI gateway returned ${response.status}, retrying (attempt ${attempt + 1})...`);
       if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
     }
 
@@ -97,9 +98,6 @@ Respond with ONLY the JSON object, no other text.`;
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      // FIX: Log details server-side only; return a generic message to the client
-      const errorText = response ? await response.text() : "No response";
-      console.error("AI gateway error:", response?.status, errorText);
       throw new Error("AI_GATEWAY_ERROR");
     }
 

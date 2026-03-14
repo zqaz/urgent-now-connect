@@ -19,7 +19,7 @@ const statusColor = (status: string) => {
   }
 };
 
-const networkBadgeConfig: Record<NetworkStatus, { label: string; icon: React.ReactNode; className: string; clickable?: boolean } | null> = {
+const networkBadgeConfig: Record<NetworkStatus, { label: string; labelCall?: string; icon: React.ReactNode; className: string; clickable?: boolean } | null> = {
   in_network: {
     label: "In-Network",
     icon: <ShieldCheck className="w-3 h-3" />,
@@ -27,8 +27,9 @@ const networkBadgeConfig: Record<NetworkStatus, { label: string; icon: React.Rea
   },
   out_of_network: {
     label: "Out of Network",
+    labelCall: "Call to find out",
     icon: <ShieldX className="w-3 h-3" />,
-    className: "bg-alert-red/10 text-alert-red border border-alert-red/30",
+    className: "bg-muted text-muted-foreground border border-border",
   },
   call_to_verify: {
     label: "Tap to Call & Verify",
@@ -43,12 +44,13 @@ const ClinicCard = ({ clinic, rank, networkStatus = "none", onNavigate }: Clinic
   const totalTime = clinic.wait_time_min + clinic.travel_time_min;
   const isOutOfNetwork = networkStatus === "out_of_network";
   const badge = networkBadgeConfig[networkStatus];
+  const outOfNetworkCanCall = isOutOfNetwork && !!clinic.phone;
 
   return (
-    <div className={`bg-card rounded-xl p-4 border transition-all duration-300
+    <div className={`rounded-xl p-4 border transition-all duration-300
       ${isOutOfNetwork
-        ? "border-alert-red/15 opacity-55 shadow-card"
-        : "border-border shadow-card hover:shadow-card-hover"
+        ? "bg-muted/50 border-border opacity-80 shadow-card"
+        : "bg-card border-border shadow-card hover:shadow-card-hover"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -94,7 +96,22 @@ const ClinicCard = ({ clinic, rank, networkStatus = "none", onNavigate }: Clinic
 
           {/* Insurance network badge — tap to call when we have a number */}
           {badge && (
-            badge.clickable && clinic.phone ? (
+            outOfNetworkCanCall ? (
+              <a
+                href={`tel:${clinic.phone}`}
+                className="inline-flex items-center gap-2 mt-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full min-h-[28px] ${badge.className}`}>
+                  {badge.icon}
+                  {badge.label}
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline">
+                  <PhoneCall className="w-3 h-3" />
+                  {badge.labelCall ?? "Call to find out"}
+                </span>
+              </a>
+            ) : badge.clickable && clinic.phone ? (
               <a
                 href={`tel:${clinic.phone}`}
                 className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full mt-2 min-h-[28px] items-center ${badge.className}`}

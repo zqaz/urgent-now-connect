@@ -9,7 +9,7 @@ interface WinnerCardProps {
   onNavigate?: (clinic: Clinic) => void;
 }
 
-const networkBadge: Record<NetworkStatus, { label: string; icon: React.ReactNode; className: string; clickable?: boolean } | null> = {
+const networkBadge: Record<NetworkStatus, { label: string; labelCall?: string; icon: React.ReactNode; className: string; clickable?: boolean } | null> = {
   in_network: {
     label: "In-Network",
     icon: <ShieldCheck className="w-3 h-3" />,
@@ -17,8 +17,9 @@ const networkBadge: Record<NetworkStatus, { label: string; icon: React.ReactNode
   },
   out_of_network: {
     label: "Out of Network",
+    labelCall: "Call to find out",
     icon: <ShieldX className="w-3 h-3" />,
-    className: "bg-alert-red/10 text-alert-red border border-alert-red/30",
+    className: "bg-muted text-muted-foreground border border-border",
   },
   call_to_verify: {
     label: "Tap to Call & Verify",
@@ -32,23 +33,24 @@ const networkBadge: Record<NetworkStatus, { label: string; icon: React.ReactNode
 const WinnerCard = ({ clinic, networkStatus = "none", onNavigate }: WinnerCardProps) => {
   const isOutOfNetwork = networkStatus === "out_of_network";
   const badge = networkBadge[networkStatus];
+  const outOfNetworkCanCall = isOutOfNetwork && !!clinic.phone;
 
   return (
-    <div className={`relative bg-card rounded-2xl p-5 border-2 overflow-hidden transition-all
+    <div className={`relative rounded-2xl p-5 border-2 overflow-hidden transition-all
       ${isOutOfNetwork
-        ? "border-alert-red/20 opacity-60 shadow-card"
-        : "border-safe-green/30 shadow-winner"
+        ? "bg-muted/50 border-border opacity-80 shadow-card"
+        : "bg-card border-safe-green/30 shadow-winner"
       }`}
     >
-      {/* Out-of-network overlay banner */}
+      {/* Out-of-network overlay */}
       {isOutOfNetwork && (
-        <div className="absolute inset-0 bg-background/20 rounded-2xl pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-background/30 rounded-2xl pointer-events-none z-10" />
       )}
 
       {/* Winner / out-of-network top badge */}
       <div className="absolute top-0 right-0">
         {isOutOfNetwork ? (
-          <div className="bg-alert-red/10 text-alert-red text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl border-l border-b border-alert-red/20">
+          <div className="bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl border-l border-b border-border">
             <span className="flex items-center gap-1">
               <ShieldX className="w-3 h-3" /> Out of Network
             </span>
@@ -97,7 +99,22 @@ const WinnerCard = ({ clinic, networkStatus = "none", onNavigate }: WinnerCardPr
 
           {/* Insurance network badge — tap to call when we have a number */}
           {badge && (
-            badge.clickable && clinic.phone ? (
+            outOfNetworkCanCall ? (
+              <a
+                href={`tel:${clinic.phone}`}
+                className="inline-flex items-center gap-2 mt-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full min-h-[28px] ${badge.className}`}>
+                  {badge.icon}
+                  {badge.label}
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline">
+                  <PhoneCall className="w-3 h-3" />
+                  {badge.labelCall ?? "Call to find out"}
+                </span>
+              </a>
+            ) : badge.clickable && clinic.phone ? (
               <a
                 href={`tel:${clinic.phone}`}
                 className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full mt-2 min-h-[28px] items-center ${badge.className}`}
