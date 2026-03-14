@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// FIX: Restrict CORS to a specific allowed origin instead of wildcard "*".
-// Set the ALLOWED_ORIGIN secret in Supabase Vault (e.g. "https://yourapp.com").
 const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") ?? "*";
 
 const corsHeaders = {
@@ -11,31 +9,43 @@ const corsHeaders = {
 };
 
 const VALID_CARE_TYPES = new Set(["urgent_care", "er", "critical"]);
-
-// FIX: Strict coordinate range validation constants
 const LAT_MIN = -90;
 const LAT_MAX = 90;
 const LNG_MIN = -180;
 const LNG_MAX = 180;
 
-// FIX: URL protocol allowlist — only http/https are accepted from AI output
 const SAFE_URL_REGEX = /^https?:\/\/.+/i;
 
 function sanitizeClinicUrl(url: unknown): string {
-  if (typeof url !== "string" || !SAFE_URL_REGEX.test(url.trim())) {
-    return "";
-  }
+  if (typeof url !== "string" || !SAFE_URL_REGEX.test(url.trim())) return "";
   return url.trim();
 }
 
-// Phone: digits and + only, 10–15 chars (E.164-ish)
 function sanitizeClinicPhone(phone: unknown): string {
   if (typeof phone !== "string") return "";
   const digits = phone.replace(/\D/g, "");
-  if (digits.length >= 10 && digits.length <= 15) {
-    return "+" + digits;
-  }
+  if (digits.length >= 10 && digits.length <= 15) return "+" + digits;
   return "";
+}
+
+function getAIConfig() {
+  const geminiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+  if (geminiKey) {
+    return {
+      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      key: geminiKey,
+      model: "gemini-2.0-flash",
+    };
+  }
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  if (lovableKey) {
+    return {
+      url: "https://ai.gateway.lovable.dev/v1/chat/completions",
+      key: lovableKey,
+      model: "google/gemini-2.5-flash",
+    };
+  }
+  throw new Error("No AI API key configured. Set GOOGLE_GEMINI_API_KEY or enable Lovable Cloud.");
 }
 
 serve(async (req) => {
@@ -53,8 +63,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // FIX: Validate coordinate ranges to prevent absurd or out-of-bounds values
     if (lat < LAT_MIN || lat > LAT_MAX || !isFinite(lat)) {
       return new Response(
         JSON.stringify({ error: "lat must be between -90 and 90" }),
@@ -71,8 +79,7 @@ serve(async (req) => {
     const resolvedCareType = VALID_CARE_TYPES.has(care_type) ? care_type : "urgent_care";
     const facilityType = resolvedCareType === "urgent_care" ? "urgent care clinics" : "emergency rooms";
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ai = getAIConfig();
 
     const now = new Date();
     const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" });
@@ -106,7 +113,7 @@ Guidelines:
 Respond with ONLY the JSON array, no other text.`;
 
     const requestBody = JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: ai.model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `User location: latitude ${lat}, longitude ${lng}. Find nearby ${facilityType}.` },
@@ -115,17 +122,14 @@ Respond with ONLY the JSON array, no other text.`;
 
     let response: Response | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
-      response = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: requestBody,
-        }
-      );
+      response = await fetch(ai.url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${ai.key}`,
+          "Content-Type": "application/json",
+        },
+        body: requestBody,
+      });
       if (response.ok || (response.status !== 500 && response.status !== 503)) break;
       if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
     }
@@ -166,7 +170,6 @@ Respond with ONLY the JSON array, no other text.`;
       throw new Error("AI_PARSE_ERROR");
     }
 
-    // FIX: Sanitize every clinic object — strip or reject dangerous field values
     const sanitized = clinics.map((c: unknown, i: number) => {
       const clinic = c as Record<string, unknown>;
       return {
@@ -196,7 +199,6 @@ Respond with ONLY the JSON array, no other text.`;
           : 4.0,
         provider: typeof clinic.provider === "string" ? clinic.provider.slice(0, 80) : "",
         status: typeof clinic.status === "string" ? clinic.status.slice(0, 40) : "",
-        // FIX: Only allow http/https URLs; anything else (e.g. javascript:) becomes empty string
         url: sanitizeClinicUrl(clinic.url),
         phone: sanitizeClinicPhone(clinic.phone),
       };
@@ -207,7 +209,6 @@ Respond with ONLY the JSON array, no other text.`;
     });
   } catch (e) {
     console.error("fetch-clinics error:", e);
-    // FIX: Return a generic error message — never leak internal error details to the client
     return new Response(
       JSON.stringify({ error: "Unable to fetch clinic data. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

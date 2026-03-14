@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// FIX: Restrict CORS to a specific allowed origin instead of wildcard "*".
-// Set the ALLOWED_ORIGIN secret in Supabase Vault (e.g. "https://yourapp.com").
-// Falls back to wildcard only if the secret is not configured (development only).
 const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") ?? "*";
 
 const corsHeaders = {
@@ -11,12 +8,29 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// FIX: Hard limits on transcript length to prevent cost-inflation and prompt-injection
 const MAX_TRANSCRIPT_BYTES = 2000;
-
-// FIX: Strict allowlists for AI response fields
 const VALID_CARE_TYPES = new Set(["urgent_care", "er", "critical"]);
 const VALID_SEVERITIES = new Set(["low", "moderate", "high", "critical"]);
+
+function getAIConfig() {
+  const geminiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+  if (geminiKey) {
+    return {
+      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      key: geminiKey,
+      model: "gemini-2.0-flash",
+    };
+  }
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  if (lovableKey) {
+    return {
+      url: "https://ai.gateway.lovable.dev/v1/chat/completions",
+      key: lovableKey,
+      model: "google/gemini-2.5-flash",
+    };
+  }
+  throw new Error("No AI API key configured. Set GOOGLE_GEMINI_API_KEY or enable Lovable Cloud.");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -34,7 +48,6 @@ serve(async (req) => {
       );
     }
 
-    // FIX: Reject transcript that exceeds the byte limit
     if (new TextEncoder().encode(transcript).length > MAX_TRANSCRIPT_BYTES) {
       return new Response(
         JSON.stringify({ error: "transcript is too long" }),
@@ -42,8 +55,7 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ai = getAIConfig();
 
     const systemPrompt = `You are a medical triage AI assistant. Based on the patient's symptom description, determine whether they need:
 1. "urgent_care" - symptoms that are concerning but not life-threatening (e.g., sprains, mild infections, cuts needing stitches, fever, ear pain, UTI symptoms, minor burns, rashes)
@@ -61,7 +73,7 @@ Example response:
 Respond with ONLY the JSON object, no other text.`;
 
     const requestBody = JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: ai.model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Patient describes: "${transcript}"` },
@@ -70,17 +82,14 @@ Respond with ONLY the JSON object, no other text.`;
 
     let response: Response | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
-      response = await fetch(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: requestBody,
-        }
-      );
+      response = await fetch(ai.url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${ai.key}`,
+          "Content-Type": "application/json",
+        },
+        body: requestBody,
+      });
       if (response.ok || (response.status !== 500 && response.status !== 503)) break;
       if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
     }
@@ -117,18 +126,11 @@ Respond with ONLY the JSON object, no other text.`;
       throw new Error("AI_PARSE_ERROR");
     }
 
-    // FIX: Strict allowlist validation on all AI-returned fields
-    if (
-      typeof result.care_type !== "string" ||
-      !VALID_CARE_TYPES.has(result.care_type)
-    ) {
+    if (typeof result.care_type !== "string" || !VALID_CARE_TYPES.has(result.care_type)) {
       console.error("Invalid care_type from AI:", result.care_type);
       throw new Error("AI_INVALID_RESPONSE");
     }
-    if (
-      typeof result.severity !== "string" ||
-      !VALID_SEVERITIES.has(result.severity)
-    ) {
+    if (typeof result.severity !== "string" || !VALID_SEVERITIES.has(result.severity)) {
       console.error("Invalid severity from AI:", result.severity);
       throw new Error("AI_INVALID_RESPONSE");
     }
@@ -137,7 +139,6 @@ Respond with ONLY the JSON object, no other text.`;
       throw new Error("AI_INVALID_RESPONSE");
     }
 
-    // FIX: Truncate recommendation to prevent excessively long content reaching the client
     const safeRecommendation = result.recommendation.slice(0, 300);
 
     return new Response(
@@ -150,13 +151,9 @@ Respond with ONLY the JSON object, no other text.`;
     );
   } catch (e) {
     console.error("triage-evaluate error:", e);
-    // FIX: Return a generic error message — never leak internal error details to the client
     return new Response(
       JSON.stringify({ error: "Unable to evaluate symptoms. Please try again." }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
