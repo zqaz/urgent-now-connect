@@ -83,7 +83,20 @@ const ProfileModal = ({
 
   const handleSave = async () => {
     setError(null);
-    const { error: err } = await onSave(form);
+    // Normalize empty strings to null for optional DB columns
+    const updates: UserProfileUpdate = {
+      name: form.name?.trim() || null,
+      date_of_birth: form.date_of_birth || null,
+      insurance_id: form.insurance_id || null,
+      blood_type: form.blood_type || null,
+      allergies: form.allergies?.trim() || null,
+      medications: form.medications?.trim() || null,
+      conditions: form.conditions?.trim() || null,
+      emergency_contact_name: form.emergency_contact_name?.trim() || null,
+      emergency_contact_phone: form.emergency_contact_phone?.trim() || null,
+      notes: form.notes?.trim() || null,
+    };
+    const { error: err } = await onSave(updates);
     if (err) {
       setError(err.message);
     } else {

@@ -225,8 +225,9 @@ const Index = () => {
         recommendation:
           "We couldn't complete the AI evaluation. Based on precaution, please visit an urgent care clinic.",
       });
-      setClinics(enrichAndFilter(mockClinics, userLocation, DEFAULT_RADIUS_MILES));
-      setAppState("dashboard");
+      pendingCareTypeRef.current = "urgent_care";
+      // Still show insurance selection so the feature is always available
+      setAppState("insurance_select");
     }
   }, [confirmedTranscript, toast, userLocation, addEntry, profile, fetchClinics]);
 
@@ -251,6 +252,13 @@ const Index = () => {
 
   const handleInsuranceSelect = useCallback((id: string) => proceedWithInsurance(id), [proceedWithInsurance]);
   const handleInsuranceSkip = useCallback(() => proceedWithInsurance(null), [proceedWithInsurance]);
+
+  const handleSaveInsuranceToProfile = useCallback(
+    async (insuranceId: string) => {
+      await upsertProfile({ insurance_id: insuranceId });
+    },
+    [upsertProfile]
+  );
 
   const handleBack = useCallback(() => {
     setAppState("hero");
@@ -378,6 +386,8 @@ const Index = () => {
           onSelect={handleInsuranceSelect}
           onSkip={handleInsuranceSkip}
           loading={insuranceContinuing}
+          isLoggedIn={!!user}
+          onSaveToProfile={handleSaveInsuranceToProfile}
           profileButton={
             <ProfileButton
               profile={profile}

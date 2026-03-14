@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, ArrowRight, SkipForward, CheckCircle2, Loader2 } from "lucide-react";
+import { ShieldCheck, ArrowRight, SkipForward, CheckCircle2, Loader2, Bookmark } from "lucide-react";
 import { INSURANCE_OPTIONS, InsuranceOption } from "@/data/insuranceData";
 
 interface InsuranceSelectProps {
@@ -7,14 +7,26 @@ interface InsuranceSelectProps {
   onSkip: () => void;
   profileButton?: React.ReactNode;
   loading?: boolean;
+  /** When user is logged in, offer to save selected insurance to profile for next time */
+  isLoggedIn?: boolean;
+  onSaveToProfile?: (insuranceId: string) => Promise<void>;
 }
 
-const InsuranceSelect = ({ onSelect, onSkip, profileButton, loading = false }: InsuranceSelectProps) => {
+const InsuranceSelect = ({ onSelect, onSkip, profileButton, loading = false, isLoggedIn = false, onSaveToProfile }: InsuranceSelectProps) => {
   const [selected, setSelected] = useState<string | null>(null);
+  const [saveToProfile, setSaveToProfile] = useState(false);
 
-  const handleConfirm = (e: React.MouseEvent) => {
+  const handleConfirm = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (selected && !loading) onSelect(selected);
+    if (!selected || loading) return;
+    if (saveToProfile && onSaveToProfile) {
+      try {
+        await onSaveToProfile(selected);
+      } catch {
+        // Non-blocking; flow continues
+      }
+    }
+    onSelect(selected);
   };
 
   return (
@@ -79,6 +91,18 @@ const InsuranceSelect = ({ onSelect, onSkip, profileButton, loading = false }: I
       {/* Fixed bottom actions */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border px-4 py-4 z-40 safe-area-pb">
         <div className="max-w-lg mx-auto flex flex-col gap-2">
+          {isLoggedIn && onSaveToProfile && selected && (
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors py-1">
+              <input
+                type="checkbox"
+                checked={saveToProfile}
+                onChange={(e) => setSaveToProfile(e.target.checked)}
+                className="rounded border-border text-primary focus:ring-primary/50"
+              />
+              <Bookmark className="w-4 h-4 shrink-0" />
+              Save to my profile for next time
+            </label>
+          )}
           <button
             type="button"
             onClick={handleConfirm}
