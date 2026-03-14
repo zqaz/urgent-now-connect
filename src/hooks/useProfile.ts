@@ -39,7 +39,7 @@ function makeDemoProfile(id: string): UserProfile {
     id,
     name: "Alex Johnson",
     date_of_birth: "1990-04-15",
-    insurance_id: "premera",
+    insurance_id: "molina",
     blood_type: "O+",
     allergies: "Penicillin, Sulfa drugs",
     medications: "Metformin 500mg (twice daily), Vitamin D 2000 IU",
@@ -78,21 +78,42 @@ export function useProfile(user: User | null) {
     if (!user) { setProfile(null); return; }
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    if (error && isTableMissingError(error)) {
-      // Supabase table not created yet — use localStorage with demo data
+      if (error) {
+        // Any Supabase error (API key, table missing, network, etc.) → use localStorage
+        setIsLocalMode(true);
+        const existing = loadLocalProfile(user.id);
+        if (existing) {
+          setProfile(existing);
+        } else {
+          // Create and save demo profile immediately
+          const demoProfile = makeDemoProfile(user.id);
+          saveLocalProfile(demoProfile);
+          setProfile(demoProfile);
+        }
+      } else {
+        setIsLocalMode(false);
+        setProfile(data ?? makeEmptyProfile(user.id));
+      }
+    } catch (err) {
+      // Network errors or other exceptions → use localStorage
       setIsLocalMode(true);
       const existing = loadLocalProfile(user.id);
-      setProfile(existing ?? makeDemoProfile(user.id));
-    } else {
-      setIsLocalMode(false);
-      setProfile(data ?? makeEmptyProfile(user.id));
+      if (existing) {
+        setProfile(existing);
+      } else {
+        const demoProfile = makeDemoProfile(user.id);
+        saveLocalProfile(demoProfile);
+        setProfile(demoProfile);
+      }
     }
+
     setLoading(false);
   }, [user]);
 
@@ -117,13 +138,34 @@ export function useProfile(user: User | null) {
         return { data: updated, error: null };
       }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .upsert({ id: user.id, ...updates } as any)
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .upsert({ id: user.id, ...updates } as any)
+          .select()
+          .single();
 
-      if (error && isTableMissingError(error)) {
+        if (error) {
+          // Any Supabase error → switch to localStorage mode
+          setIsLocalMode(true);
+          const existing = loadLocalProfile(user.id) ?? makeDemoProfile(user.id);
+          const updated: UserProfile = {
+            ...existing,
+            ...updates,
+            id: user.id,
+            updated_at: new Date().toISOString(),
+          };
+          saveLocalProfile(updated);
+          setProfile(updated);
+          setSaving(false);
+          return { data: updated, error: null };
+        }
+
+        if (data) setProfile(data);
+        setSaving(false);
+        return { data: data ?? null, error: null };
+      } catch (err) {
+        // Network or other errors → use localStorage
         setIsLocalMode(true);
         const existing = loadLocalProfile(user.id) ?? makeDemoProfile(user.id);
         const updated: UserProfile = {
@@ -137,10 +179,6 @@ export function useProfile(user: User | null) {
         setSaving(false);
         return { data: updated, error: null };
       }
-
-      if (!error && data) setProfile(data);
-      setSaving(false);
-      return { data: data ?? null, error: error as Error | null };
     },
     [user, isLocalMode]
   );
