@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   X, User, ShieldCheck,
-  Stethoscope, Phone, FileText, Save, Loader2, LogOut, CheckCircle2,
+  Stethoscope, Phone, FileText, Save, Loader2, LogOut, CheckCircle2, Sparkles,
 } from "lucide-react";
 import { UserProfile, UserProfileUpdate } from "@/hooks/useProfile";
 import { INSURANCE_OPTIONS } from "@/data/insuranceData";
@@ -17,6 +17,20 @@ interface ProfileModalProps {
 }
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+// Realistic example data for demo purposes
+const EXAMPLE_DATA: UserProfileUpdate = {
+  name: "Sarah Johnson",
+  date_of_birth: "1985-06-15",
+  insurance_id: "uhc", // UnitedHealthcare
+  blood_type: "A+",
+  allergies: "Penicillin, shellfish, latex",
+  medications: "Lisinopril 10mg (daily), Atorvastatin 20mg (daily), Levothyroxine 75mcg (daily)",
+  conditions: "Hypertension, Hypothyroidism, Seasonal allergies",
+  emergency_contact_name: "Michael Johnson",
+  emergency_contact_phone: "(206) 555-0187",
+  notes: "Prefers morning appointments when possible. Right-handed.",
+};
 
 const SectionTitle = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
   <div className="flex items-center gap-2 mb-3 mt-5 first:mt-0">
@@ -81,6 +95,10 @@ const ProfileModal = ({
   const set = (field: keyof UserProfileUpdate, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value || null }));
 
+  const fillWithExampleData = () => {
+    setForm(EXAMPLE_DATA);
+  };
+
   const handleSave = async () => {
     setError(null);
     // Normalize empty strings to null for optional DB columns
@@ -141,6 +159,28 @@ const ProfileModal = ({
         </div>
 
         <div className="px-5 py-5 space-y-0">
+          {/* Example Data Button - shown only if profile is empty/new */}
+          {!profile?.name && (
+            <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-xl">
+              <div className="flex items-start gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-primary mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-foreground mb-1">New to UrgentNow?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Fill your profile with example data to see how it looks, then customize it with your real information.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={fillWithExampleData}
+                className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-2 px-3 rounded-lg text-xs hover:opacity-90 transition-opacity"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Fill with Example Data
+              </button>
+            </div>
+          )}
+
           {/* Personal */}
           <SectionTitle icon={<User className="w-3.5 h-3.5" />} label="Personal" />
 

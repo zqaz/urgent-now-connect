@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   X, Mail, Lock, LogIn, UserPlus, Loader2, Eye, EyeOff,
   CheckCircle2, XCircle, Sparkles, ArrowRight, User,
@@ -43,6 +43,15 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
 
   const switchView = (v: "signin" | "signup") => {
     setView(v);
@@ -101,8 +110,14 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
   /* ── Welcome screen (post-signup) ─────────────────────────────────────── */
   if (view === "welcome") {
     return (
-      <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-card rounded-2xl w-full max-w-sm shadow-xl border border-border overflow-hidden">
+      <div
+        className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <div
+          className="bg-card rounded-2xl w-full max-w-sm shadow-xl border border-border overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Close */}
           <div className="flex justify-end px-4 pt-4">
             <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors">
@@ -168,8 +183,14 @@ const AuthModal = ({ onClose, onSuccess }: AuthModalProps) => {
 
   /* ── Sign-in / Sign-up form ───────────────────────────────────────────── */
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl w-full max-w-sm shadow-xl border border-border overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card rounded-2xl w-full max-w-sm shadow-xl border border-border overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
           <div>

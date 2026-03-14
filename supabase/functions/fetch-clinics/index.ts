@@ -28,13 +28,20 @@ function sanitizeClinicPhone(phone: unknown): string {
   return "";
 }
 
-function getAIConfig() {
+interface AIConfig {
+  url: string;
+  model: string;
+  useBearer: boolean;
+  key?: string;
+}
+
+function getAIConfig(): AIConfig | null {
   const geminiKey = Deno.env.get("GOOGLE_GEMINI_API_KEY");
   if (geminiKey) {
     return {
-      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-      key: geminiKey,
+      url: `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${geminiKey}`,
       model: "gemini-2.0-flash",
+      useBearer: false,
     };
   }
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
@@ -43,9 +50,10 @@ function getAIConfig() {
       url: "https://ai.gateway.lovable.dev/v1/chat/completions",
       key: lovableKey,
       model: "google/gemini-2.5-flash",
+      useBearer: true,
     };
   }
-  throw new Error("No AI API key configured. Set GOOGLE_GEMINI_API_KEY or enable Lovable Cloud.");
+  return null;
 }
 
 serve(async (req) => {
@@ -80,6 +88,9 @@ serve(async (req) => {
     const facilityType = resolvedCareType === "urgent_care" ? "urgent care clinics" : "emergency rooms";
 
     const ai = getAIConfig();
+    if (!ai) {
+      throw new Error("No AI API key configured");
+    }
 
     const now = new Date();
     const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" });
@@ -122,12 +133,16 @@ Respond with ONLY the JSON array, no other text.`;
 
     let response: Response | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (ai.useBearer && ai.key) {
+        headers["Authorization"] = `Bearer ${ai.key}`;
+      }
+
       response = await fetch(ai.url, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${ai.key}`,
-          "Content-Type": "application/json",
-        },
+        headers,
         body: requestBody,
       });
       if (response.ok || (response.status !== 500 && response.status !== 503)) break;
@@ -188,11 +203,11 @@ Respond with ONLY the JSON array, no other text.`;
             ? Math.min(LNG_MAX, Math.max(LNG_MIN, (clinic.coordinates as Record<string, unknown>).lng as number))
             : lng,
         },
-        wait_time_min: typeof clinic.wait_time_min === "number" && clinic.wait_time_min >= 0
-          ? Math.min(Math.round(clinic.wait_time_min), 240)
+        wait_time_min: typeof clinic.wait_time_min === "number" && clinic.wait_time_min >= 0 && isFinite(clinic.wait_time_min)
+          ? Math.min(Math.max(0, Math.round(clinic.wait_time_min)), 240)
           : 30,
-        travel_time_min: typeof clinic.travel_time_min === "number" && clinic.travel_time_min >= 0
-          ? Math.min(Math.round(clinic.travel_time_min), 120)
+        travel_time_min: typeof clinic.travel_time_min === "number" && clinic.travel_time_min >= 0 && isFinite(clinic.travel_time_min)
+          ? Math.min(Math.max(0, Math.round(clinic.travel_time_min)), 120)
           : 15,
         rating: typeof clinic.rating === "number"
           ? Math.min(5.0, Math.max(1.0, clinic.rating))
