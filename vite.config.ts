@@ -10,8 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     hmr: { overlay: false },
     headers: {
-      // Mirrors the meta-tag CSP in index.html; dev server enforces these too
-      "X-Frame-Options": "DENY",
+      // Keep security headers that don't block iframe previews
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
       "Permissions-Policy": "microphone=(self), geolocation=(self), camera=(), payment=()",
