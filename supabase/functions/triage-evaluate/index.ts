@@ -162,7 +162,7 @@ serve(async (req) => {
 
     // Try AI-based triage first
     const aiConfig = getAIConfig();
-    let result: Record<string, unknown> | null = null;
+    let result: { care_type: string; severity: string; recommendation: string } | null = null;
     let triageMethod = "unknown";
 
     if (aiConfig) {
