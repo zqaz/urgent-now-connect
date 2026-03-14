@@ -43,7 +43,7 @@ function getAIConfig(): AIConfig | null {
   return null; // No AI available, will use rule-based fallback
 }
 
-async function tryAITriage(transcript: string, ai: AIConfig): Promise<{ care_type: string; severity: string; recommendation: string } | null> {
+async function tryAITriage(transcript: string, ai: AIConfig): Promise<Record<string, unknown> | null> {
   const systemPrompt = `You are a medical triage AI assistant. Based on the patient's symptom description, determine whether they need:
 1. "urgent_care" - symptoms that are concerning but not life-threatening (e.g., sprains, mild infections, cuts needing stitches, fever, ear pain, UTI symptoms, minor burns, rashes)
 2. "er" - symptoms that require emergency room care (e.g., chest pain, difficulty breathing, severe bleeding, head trauma, stroke symptoms, severe allergic reactions, broken bones with deformity, seizures, loss of consciousness)
@@ -162,7 +162,7 @@ serve(async (req) => {
 
     // Try AI-based triage first
     const aiConfig = getAIConfig();
-    let result: { care_type: string; severity: string; recommendation: string } | null = null;
+    let result: Record<string, unknown> | null = null;
     let triageMethod = "unknown";
 
     if (aiConfig) {
