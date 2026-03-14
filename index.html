@@ -31,14 +31,10 @@
         wss://*.supabase.co
         https://nominatim.openstreetmap.org;
       frame-src 'none';
-      frame-ancestors 'none';
       object-src 'none';
       base-uri 'self';
       form-action 'self';
     " />
-
-    <!-- Prevent clickjacking in older browsers that don't support CSP frame-ancestors -->
-    <meta http-equiv="X-Frame-Options" content="DENY" />
 
     <!-- Don't send Referer header to third-party origins (protects user privacy) -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
